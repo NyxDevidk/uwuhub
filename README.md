@@ -79,3 +79,49 @@
  ## Contato
 
  Se quiser ajuda ou quiser que eu melhore o README (mais exemplos, badges, passos de deploy, screenshots), diga o que quer e eu atualizo.
+
+## Executar o Hub via `loadstring`
+
+Você pode executar o hub diretamente a partir do GitHub com um `loadstring`. Use a URL "raw" do GitHub (sem `refs/heads`). Exemplo simples (one-liner):
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau"))()
+```
+
+Se o executor não expuser `game:HttpGet`, use fallbacks comuns (Synapse, outros executores):
+
+```lua
+-- Synapse X
+loadstring(syn.request({Url = "https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau", Method = "GET"}).Body)()
+
+-- Outros com `request`
+loadstring(request({Url = "https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau", Method = "GET"}).Body)()
+```
+
+Versão recomendada (checa fetch + `loadstring` com `pcall` para evitar crashes):
+
+```lua
+local url = "https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau"
+local ok, body = pcall(function()
+    if syn and syn.request then return syn.request({Url = url, Method = "GET"}).Body end
+    if request then return request({Url = url, Method = "GET"}).Body end
+    if game and game.HttpGet then return game:HttpGet(url) end
+    error("Nenhum método HTTP disponível")
+end)
+
+if not ok or not body or #body == 0 then
+    warn("Falha ao obter o script:", body)
+    return
+end
+
+local chunk, loadErr = loadstring(body)
+if not chunk then
+    warn("loadstring error:", loadErr)
+    return
+end
+
+local success, runRes = pcall(chunk)
+if not success then
+    warn("Erro ao executar script:", runRes)
+end
+```
