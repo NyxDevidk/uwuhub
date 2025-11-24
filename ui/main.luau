@@ -73,42 +73,36 @@ function UI:Create(config: {Name: string, Discord: string}): ()
 	-- Animação de entrada
 	self:AnimateOpen()
 
-	-- Tentar carregar Rayfield e criar uma janela adicional com controles
-	local loaded = pcall(tryLoadRayfield)
-	if loaded and Rayfield then
-		local ok, err = pcall(function()
+	-- Tentar carregar Rayfield (protegido)
+	pcall(function()
+		if not tryLoadRayfield() or not Rayfield then return end
+
+		pcall(function()
 			RayfieldWindow = Rayfield:CreateWindow({
 				Name = config.Name or "UwU Hub",
 				LoadingTitle = config.Name or "UwU Hub",
 				LoadingSubtitle = config.Discord or "",
 				ConfigurationSaving = {Enabled = true, Folder = "UwUHub", FileName = "config"},
-				-- UwU custom theme table (pastel / pink tones)
 				Theme = {
 					TextColor = Color3.fromRGB(250, 240, 250),
-					
 					Background = Color3.fromRGB(28, 20, 30),
 					Topbar = Color3.fromRGB(45, 20, 35),
 					Shadow = Color3.fromRGB(15, 10, 15),
-					
 					NotificationBackground = Color3.fromRGB(30, 20, 30),
 					NotificationActionsBackground = Color3.fromRGB(250, 240, 250),
-					
 					TabBackground = Color3.fromRGB(60, 40, 55),
 					TabStroke = Color3.fromRGB(70, 45, 65),
 					TabBackgroundSelected = Color3.fromRGB(255, 220, 235),
 					TabTextColor = Color3.fromRGB(240, 230, 240),
 					SelectedTabTextColor = Color3.fromRGB(40, 20, 30),
-					
 					ElementBackground = Color3.fromRGB(35, 25, 35),
 					ElementBackgroundHover = Color3.fromRGB(45, 30, 45),
 					SecondaryElementBackground = Color3.fromRGB(25, 20, 25),
 					ElementStroke = Color3.fromRGB(80, 50, 70),
 					SecondaryElementStroke = Color3.fromRGB(60, 40, 55),
-						
 					SliderBackground = Color3.fromRGB(255, 105, 180),
 					SliderProgress = Color3.fromRGB(255, 130, 200),
 					SliderStroke = Color3.fromRGB(255, 160, 220),
-					
 					ToggleBackground = Color3.fromRGB(30, 25, 30),
 					ToggleEnabled = Color3.fromRGB(255, 105, 180),
 					ToggleDisabled = Color3.fromRGB(130, 110, 130),
@@ -116,10 +110,8 @@ function UI:Create(config: {Name: string, Discord: string}): ()
 					ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
 					ToggleEnabledOuterStroke = Color3.fromRGB(160, 120, 140),
 					ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
-					
 					DropdownSelected = Color3.fromRGB(45, 30, 40),
 					DropdownUnselected = Color3.fromRGB(30, 20, 30),
-					
 					InputBackground = Color3.fromRGB(30, 25, 30),
 					InputStroke = Color3.fromRGB(70, 50, 70),
 					PlaceholderColor = Color3.fromRGB(200, 180, 200)
@@ -128,103 +120,29 @@ function UI:Create(config: {Name: string, Discord: string}): ()
 				KeySystem = false,
 			})
 
+			if not RayfieldWindow then return end
 			local aimTab = RayfieldWindow:CreateTab("AimLock")
 			local espTab = RayfieldWindow:CreateTab("ESP")
 
-			-- Setup Rayfield controls for AimLock and ESP
-			local AimLock = require(script.Parent.Parent.modules.aimlock)
-			local ESP = require(script.Parent.Parent.modules.esp)
-			pcall(function()
-				if AimLock then
-					-- initialize logic without legacy GUI
-					pcall(function() AimLock:Initialize(false) end)
-					if AimLock.SetupRayfieldControls then
-						AimLock:SetupRayfieldControls(aimTab)
-					else
-						-- fallback simple toggle
-						aimTab:CreateToggle({
-							Name = "Enable AimLock",
-							CurrentValue = AimLock.State and AimLock.State.Enabled or false,
-							Callback = function(val) pcall(function() AimLock:SetEnabled(val) end) end
-						})
-					end
-					-- Keybind to toggle AimLock
-					pcall(function()
-						if aimTab.CreateKeybind then
-							aimTab:CreateKeybind({
-								Name = "Toggle AimLock Key",
-								CurrentKey = Enum.KeyCode.LeftAlt,
-								Mode = "Toggle",
-								Flag = "AimLockKey",
-								Callback = function(key)
-									-- Toggle current state
-									pcall(function()
-										local cur = AimLock.State and AimLock.State.Enabled or false
-										AimLock:SetEnabled(not cur)
-									end)
-								end
-							})
-						end
-					end)
+			-- Load modules
+			local aimLock, aimErr = pcall(function() return require(script.Parent.Parent.modules.aimlock) end)
+			local esp, espErr = pcall(function() return require(script.Parent.Parent.modules.esp) end)
+
+			if aimLock and type(aimLock) == "table" then
+				pcall(function() aimLock:Initialize(false) end)
+				if aimLock.SetupRayfieldControls then
+					pcall(function() aimLock:SetupRayfieldControls(aimTab) end)
 				end
-				if ESP then
-					pcall(function() ESP:Initialize(false) end)
-					if ESP.SetupRayfieldControls then
-						ESP:SetupRayfieldControls(espTab)
-					else
-						espTab:CreateToggle({
-							Name = "Enable ESP",
-							CurrentValue = ESP.Config and ESP.Config.Enabled or false,
-							Callback = function(val) pcall(function() ESP:SetEnabled(val) end) end
-						})
-					end
-					-- Keybind to toggle ESP
-					pcall(function()
-						if espTab.CreateKeybind then
-							espTab:CreateKeybind({
-								Name = "Toggle ESP Key",
-								CurrentKey = Enum.KeyCode.LeftControl,
-								Mode = "Toggle",
-								Flag = "ESPKey",
-								Callback = function(key)
-									pcall(function()
-										local cur = ESP.Config and ESP.Config.Enabled or false
-										ESP:SetEnabled(not cur)
-									end)
-								end
-							})
-						end
-					end)
-					-- Color picker for ESP color (if supported by module)
-					pcall(function()
-						if espTab.CreateColorPicker then
-							espTab:CreateColorPicker({
-								Name = "ESP Color",
-								Default = Color3.fromRGB(255, 105, 180),
-								Flag = "ESPColor",
-								Callback = function(color)
-									-- apply color to existing ESP strokes if present
-									pcall(function()
-										if ESP and ESP.State and ESP.State.ESPObjects then
-											for _, obj in pairs(ESP.State.ESPObjects) do
-												if obj and obj.Box then
-													local stroke = obj.Box:FindFirstChildOfClass("UIStroke")
-													if stroke then stroke.Color = color end
-												end
-											end
-										end)
-									end)
-								end
-							})
-						end
-					end)
+			end
+
+			if esp and type(esp) == "table" then
+				pcall(function() esp:Initialize(false) end)
+				if esp.SetupRayfieldControls then
+					pcall(function() esp:SetupRayfieldControls(espTab) end)
 				end
-			end)
+			end
 		end)
-		if not ok then
-			warn("Rayfield loaded but window creation failed:", err)
-		end
-	end
+	end)
 end
 
 -- Botão Abrir
