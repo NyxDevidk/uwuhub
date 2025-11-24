@@ -1,0 +1,44 @@
+/* UwU Hub - Rayfield UwU Theme CSS palette
+   Variables mirror the custom Theme passed to Rayfield in `ui/main.luau`.
+*/
+:root {
+  --uwu-text-color: #FAF0FA;
+
+  --uwu-background: #1C141E;
+  --uwu-topbar: #2D1423;
+  --uwu-shadow: #0F0A0F;
+
+  --uwu-notif-bg: #1E141E;
+  --uwu-notif-actions-bg: #FAF0FA;
+
+  --uwu-tab-bg: #3C2837;
+  --uwu-tab-stroke: #462D41;
+  --uwu-tab-bg-selected: #FFDCF3;
+  --uwu-tab-text: #F0E6F0;
+  --uwu-tab-text-selected: #28141E;
+
+  --uwu-element-bg: #231923;
+  --uwu-element-bg-hover: #2D1E2D;
+  --uwu-secondary-element-bg: #191419;
+  --uwu-element-stroke: #503246;
+  --uwu-secondary-element-stroke: #3C2837;
+
+  --uwu-slider-bg: #FF69B4;
+  --uwu-slider-progress: #FF82C8;
+  --uwu-slider-stroke: #FFA0DC;
+
+  --uwu-toggle-bg: #1E191E;
+  --uwu-toggle-enabled: #FF69B4;
+  --uwu-toggle-disabled: #826E82;
+  --uwu-toggle-enabled-stroke: #FF8CC8;
+  --uwu-toggle-disabled-stroke: #7D7D7D;
+  --uwu-toggle-enabled-outer: #A0788C;
+  --uwu-toggle-disabled-outer: #414141;
+
+  --uwu-dropdown-selected: #2D1E28;
+  --uwu-dropdown-unselected: #1E141E;
+
+  --uwu-input-bg: #1E191E;
+  --uwu-input-stroke: #463246;
+  --uwu-placeholder: #C8B4C8;
+}

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620">
+  <style>
+    .label { font-family: Arial, Helvetica, sans-serif; font-size: 14px; fill: #FFF; }
+    .hex { font-family: monospace; font-size: 12px; fill: #FFF; }
+    .title { font-family: Arial, Helvetica, sans-serif; font-size: 20px; fill: #FFF; }
+  </style>
+  <rect width="100%" height="100%" fill="#1C141E" />
+  <text x="28" y="36" class="title">UwU Hub — UwU Theme Palette</text>
+
+  <!-- row 1 -->
+  <g transform="translate(28,64)">
+    <rect x="0" y="0" width="120" height="80" fill="#FAF0FA" />
+    <text x="8" y="100" class="label">Text Color</text>
+    <text x="8" y="118" class="hex">#FAF0FA</text>
+  </g>
+
+  <g transform="translate(160,64)">
+    <rect x="0" y="0" width="120" height="80" fill="#1C141E" />
+    <text x="8" y="100" class="label">Background</text>
+    <text x="8" y="118" class="hex">#1C141E</text>
+  </g>
+
+  <g transform="translate(300,64)">
+    <rect x="0" y="0" width="120" height="80" fill="#2D1423" />
+    <text x="8" y="100" class="label">Topbar</text>
+    <text x="8" y="118" class="hex">#2D1423</text>
+  </g>
+
+  <g transform="translate(440,64)">
+    <rect x="0" y="0" width="120" height="80" fill="#0F0A0F" />
+    <text x="8" y="100" class="label">Shadow</text>
+    <text x="8" y="118" class="hex">#0F0A0F</text>
+  </g>
+
+  <!-- row 2 -->
+  <g transform="translate(28,180)">
+    <rect width="120" height="80" fill="#3C2837" />
+    <text x="8" y="100" class="label">Tab Background</text>
+    <text x="8" y="118" class="hex">#3C2837</text>
+  </g>
+
+  <g transform="translate(160,180)">
+    <rect width="120" height="80" fill="#462D41" />
+    <text x="8" y="100" class="label">Tab Stroke</text>
+    <text x="8" y="118" class="hex">#462D41</text>
+  </g>
+
+  <g transform="translate(300,180)">
+    <rect width="120" height="80" fill="#FFDCF3" />
+    <text x="8" y="100" class="label" style="fill:#28141E;">Tab Selected</text>
+    <text x="8" y="118" class="hex" style="fill:#28141E;">#FFDCF3</text>
+  </g>
+
+  <g transform="translate(440,180)">
+    <rect width="120" height="80" fill="#F0E6F0" />
+    <text x="8" y="100" class="label" style="fill:#28141E;">Tab Text</text>
+    <text x="8" y="118" class="hex" style="fill:#28141E;">#F0E6F0</text>
+  </g>
+
+  <!-- row 3 -->
+  <g transform="translate(28,296)">
+    <rect width="120" height="80" fill="#231923" />
+    <text x="8" y="100" class="label">Element BG</text>
+    <text x="8" y="118" class="hex">#231923</text>
+  </g>
+
+  <g transform="translate(160,296)">
+    <rect width="120" height="80" fill="#2D1E2D" />
+    <text x="8" y="100" class="label">Element Hover</text>
+    <text x="8" y="118" class="hex">#2D1E2D</text>
+  </g>
+
+  <g transform="translate(300,296)">
+    <rect width="120" height="80" fill="#503246" />
+    <text x="8" y="100" class="label">Element Stroke</text>
+    <text x="8" y="118" class="hex">#503246</text>
+  </g>
+
+  <g transform="translate(440,296)">
+    <rect width="120" height="80" fill="#3C2837" />
+    <text x="8" y="100" class="label">Secondary Stroke</text>
+    <text x="8" y="118" class="hex">#3C2837</text>
+  </g>
+
+  <!-- row 4 -->
+  <g transform="translate(28,412)">
+    <rect width="120" height="80" fill="#FF69B4" />
+    <text x="8" y="100" class="label" style="fill:#28141E;">Slider BG</text>
+    <text x="8" y="118" class="hex" style="fill:#28141E;">#FF69B4</text>
+  </g>
+
+  <g transform="translate(160,412)">
+    <rect width="120" height="80" fill="#FF82C8" />
+    <text x="8" y="100" class="label" style="fill:#28141E;">Slider Progress</text>
+    <text x="8" y="118" class="hex" style="fill:#28141E;">#FF82C8</text>
+  </g>
+
+  <g transform="translate(300,412)">
+    <rect width="120" height="80" fill="#FFA0DC" />
+    <text x="8" y="100" class="label" style="fill:#28141E;">Slider Stroke</text>
+    <text x="8" y="118" class="hex" style="fill:#28141E;">#FFA0DC</text>
+  </g>
+
+  <g transform="translate(440,412)">
+    <rect width="120" height="80" fill="#826E82" />
+    <text x="8" y="100" class="label">Toggle Disabled</text>
+    <text x="8" y="118" class="hex">#826E82</text>
+  </g>
+
+  <!-- footer note -->
+  <text x="28" y="580" class="hex">Theme generated from `ui/main.luau` - UwU Hub custom Rayfield theme</text>
+</svg>

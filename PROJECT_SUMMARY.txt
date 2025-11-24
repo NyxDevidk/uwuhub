@@ -1,0 +1,85 @@
+Projeto: UwU Hub
+Descrição curta:
+UwU Hub é um hub modular escrito em Luau para ambientes Roblox/executor. Fornece UI, módulos de AimLock e ESP e utilitários para integração fácil. O repositório foi projetado para ser carregado via `loadstring` a partir do GitHub (raw) ou integrado com loaders de executores (Synapse, etc.).
+
+Objetivo do resumo:
+Fornecer conteúdo e instruções para criar uma página/site do projeto em outro repositório (README web, docs, exemplos de uso, links raw e notas de segurança).
+
+Principais arquivos e estrutura:
+- `UwUHub.luau`               : entrypoint principal (carrega UI e módulos)
+- `modules/aimlock.luau`     : módulo AimLock (lógica, API e UI legacy)
+- `modules/esp.luau`         : módulo ESP (lógica, API e UI legacy)
+- `modules/utils.luau`       : utilitários (math, logging, http wrappers recomendados)
+- `ui/main.luau`             : UI principal (ScreenGui) + integração opcional com Rayfield
+- `README.md`                : documentação do repositório (exemplos de uso básicos)
+
+Resumo de funcionalidades:
+- AimLock: mira assistida com modos (Suave, Legit, Intenso), FOV configurável, checagem de parede/ally, overlay de FOV.
+- ESP: boxes, nomes, distância, barra de vida, filtros por equipe e distância máxima.
+- UI: UI própria (ScreenGui) e integração com Rayfield (carrega Rayfield via loadstring e cria janela/controles).
+- Utils: funções auxiliares e helpers para fetch remoto, caching, logging.
+
+Como executar (exemplos):
+- One-liner (raw GitHub):
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau"))()
+
+- Fallback Synapse X:
+  loadstring(syn.request({Url = "https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau", Method = "GET"}).Body)()
+
+Observações sobre URLs raw:
+- Use sempre `raw.githubusercontent.com/<user>/<repo>/<branch>/<path>` para obter o código cru.
+- Verifique manualmente no navegador se o arquivo retorna o conteúdo esperado.
+
+Integração com Rayfield (UI externa):
+- O `ui/main.luau` tenta carregar a Rayfield com:
+  loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+- Após carregar, o código cria uma janela Rayfield com `ConfigurationSaving` habilitado por padrão (pasta `UwUHub`, arquivo `config`).
+- Os módulos expõem funções para integração com Rayfield:
+  - `AimLock:SetupRayfieldControls(tab)` — cria toggle, slider, dropdown e keybind.
+  - `ESP:SetupRayfieldControls(tab)` — cria toggle, toggles de opções e slider para alcance.
+
+APIs públicas (exportadas pelos módulos):
+- AimLock
+  - `AimLock:Initialize(useGui)` — inicializa; passe `false` para pular GUI legacy e usar somente API.
+  - `AimLock:SetEnabled(boolean)` — liga/desliga o AimLock.
+  - `AimLock:SetFOV(number)`
+  - `AimLock:SetMode(number)`
+  - Configuráveis: `AimLock.Keybind` (Enum.KeyCode), `AimLock.KeyMode` ("Toggle" ou "Hold").
+- ESP
+  - `ESP:Initialize(useGui)` — inicializa; passe `false` para pular GUI legacy.
+  - `ESP:SetEnabled(boolean)`
+  - `ESP.SetupRayfieldControls(tab)`
+
+Configurações e salvamento (Rayfield):
+- Rayfield `ConfigurationSaving` foi habilitado em `ui/main.luau` com `{Enabled = true, Folder = "UwUHub", FileName = "config"}`.
+- O site pode exibir instruções para o usuário configurar preferências e explicar onde os arquivos de config ficam no executor (quando aplicável).
+
+Requisitos / Compatibilidade:
+- Projetado para rodar em ambientes Luau/Roblox com suporte a executar código via executor.
+- Suporte a APIs comuns de fetch remoto: `game:HttpGet`, `syn.request`, `request`, `http.request`.
+- Algumas funcionalidades dependem de permissões do executor (ex.: carregamento de Rayfield, HttpGet).
+
+Segurança e recomendações:
+- Executar código remoto tem risco: valide fontes e prefira repositórios confiáveis.
+- O projeto usa `pcall` para evitar crashes em fetch/exec, mas ainda roda código remoto via `loadstring`.
+- Para o site, destaque avisos de segurança e instruções para verificar o conteúdo do script (hashes/assinaturas se disponível).
+
+Sugestões de conteúdo para o site:
+- Página inicial com descrição curta, badges (build/license), e links para raw + download.
+- Seção "Quick Start" com os one-liners (raw + Synapse fallbacks).
+- Documentação da API: funções públicas dos módulos e exemplos de uso (trechos de código).
+- Seção "Configuração" explicando `ConfigurationSaving` e onde a Rayfield salva os arquivos.
+- Screenshots ou GIFs da UI Rayfield e da UI legacy.
+- Changelog/Versões e notas de compatibilidade.
+- Licença e contato (mantenha conforme `README.md`).
+
+Links importantes (raw):
+- Entrypoint raw: https://raw.githubusercontent.com/NyxDevidk/uwuhub/main/UwUHub.luau
+- Repo: https://github.com/NyxDevidk/uwuhub
+- Rayfield loader: https://sirius.menu/rayfield
+
+Contato / manutenção:
+- Owner: NyxDevidk (ver repositório para detalhes de contato)
+
+Notas finais:
+- Se desejar eu posso gerar automaticamente um `docs/` com markdown pronto para o site (páginas: Overview, Installation, API, Examples). Quer que eu gere isso também?

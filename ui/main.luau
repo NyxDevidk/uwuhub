@@ -82,6 +82,48 @@ function UI:Create(config: {Name: string, Discord: string}): ()
 				LoadingTitle = config.Name or "UwU Hub",
 				LoadingSubtitle = config.Discord or "",
 				ConfigurationSaving = {Enabled = true, Folder = "UwUHub", FileName = "config"},
+				-- UwU custom theme table (pastel / pink tones)
+				Theme = {
+					TextColor = Color3.fromRGB(250, 240, 250),
+					
+					Background = Color3.fromRGB(28, 20, 30),
+					Topbar = Color3.fromRGB(45, 20, 35),
+					Shadow = Color3.fromRGB(15, 10, 15),
+					
+					NotificationBackground = Color3.fromRGB(30, 20, 30),
+					NotificationActionsBackground = Color3.fromRGB(250, 240, 250),
+					
+					TabBackground = Color3.fromRGB(60, 40, 55),
+					TabStroke = Color3.fromRGB(70, 45, 65),
+					TabBackgroundSelected = Color3.fromRGB(255, 220, 235),
+					TabTextColor = Color3.fromRGB(240, 230, 240),
+					SelectedTabTextColor = Color3.fromRGB(40, 20, 30),
+					
+					ElementBackground = Color3.fromRGB(35, 25, 35),
+					ElementBackgroundHover = Color3.fromRGB(45, 30, 45),
+					SecondaryElementBackground = Color3.fromRGB(25, 20, 25),
+					ElementStroke = Color3.fromRGB(80, 50, 70),
+					SecondaryElementStroke = Color3.fromRGB(60, 40, 55),
+						
+					SliderBackground = Color3.fromRGB(255, 105, 180),
+					SliderProgress = Color3.fromRGB(255, 130, 200),
+					SliderStroke = Color3.fromRGB(255, 160, 220),
+					
+					ToggleBackground = Color3.fromRGB(30, 25, 30),
+					ToggleEnabled = Color3.fromRGB(255, 105, 180),
+					ToggleDisabled = Color3.fromRGB(130, 110, 130),
+					ToggleEnabledStroke = Color3.fromRGB(255, 140, 200),
+					ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
+					ToggleEnabledOuterStroke = Color3.fromRGB(160, 120, 140),
+					ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
+					
+					DropdownSelected = Color3.fromRGB(45, 30, 40),
+					DropdownUnselected = Color3.fromRGB(30, 20, 30),
+					
+					InputBackground = Color3.fromRGB(30, 25, 30),
+					InputStroke = Color3.fromRGB(70, 50, 70),
+					PlaceholderColor = Color3.fromRGB(200, 180, 200)
+				},
 				Discord = {Enabled = false},
 				KeySystem = false,
 			})
