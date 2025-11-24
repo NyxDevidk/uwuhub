@@ -58,6 +58,12 @@ AimLock.State: State = {
 -- UI Elements
 AimLock.UI: {[string]: any} = {}
 
+-- Keybind support
+AimLock.Keybind: Enum.KeyCode? = Enum.KeyCode.LeftAlt
+AimLock.KeyMode: string = "Toggle" -- "Toggle" or "Hold"
+AimLock._inputConn = nil :: RBXScriptConnection?
+AimLock._inputEndConn = nil :: RBXScriptConnection?
+
 local localPlayer = Players.LocalPlayer
 
 -- Utilitário
@@ -149,28 +155,153 @@ function AimLock:GetTarget(): (BasePart?, Vector2?)
 end
 
 -- Inicializar
-function AimLock:Initialize(): ()
+function AimLock:Initialize(useGui: boolean?): ()
 	print("[UwU Hub] 🎯 Inicializando AimLock...")
-	
-	-- Obter UI do módulo principal
-	local UI = require(script.Parent.Parent.ui.main)
-	local contentFrame = UI:GetContentFrame()
-	
-	if not contentFrame then
-		warn("[UwU Hub] ❌ Content frame não encontrado!")
-		return
+
+	-- Certificar estado mínimo
+	if not self.State then
+		self.State = {
+			Enabled = false,
+			CurrentModeIndex = 1,
+			FOVRadius = 5,
+			SelectedTarget = nil,
+			Dragging = false
+		}
 	end
-	
-	-- Criar UI do AimLock
-	self:CreateUI(contentFrame)
-	
-	-- Criar Circle Overlay
-	self:CreateOverlay(UI.Screen)
-	
-	-- Iniciar Loop de Targeting
+
+	-- Se useGui não for false, tenta criar a UI tradicional (legacy)
+	if useGui ~= false then
+		local UI = require(script.Parent.Parent.ui.main)
+		local contentFrame = UI:GetContentFrame()
+
+		if not contentFrame then
+			warn("[UwU Hub] ❌ Content frame não encontrado!")
+		else
+			self:CreateUI(contentFrame)
+			self:CreateOverlay(UI.Screen)
+		end
+	end
+
+	-- Iniciar Loop de Targeting (sempre)
 	self:StartTargeting()
-	
+
+	-- Configurar listeners de input para keybind (interno)
+	pcall(function()
+		if self._inputConn then self._inputConn:Disconnect() end
+		if self._inputEndConn then self._inputEndConn:Disconnect() end
+
+		self._inputConn = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+			if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == (self.Keybind or Enum.KeyCode.Unknown) then
+				if self.KeyMode == "Toggle" then
+					self:SetEnabled(not (self.State and self.State.Enabled or false))
+				elseif self.KeyMode == "Hold" then
+					self:SetEnabled(true)
+				end
+			end
+		end)
+
+		self._inputEndConn = UserInputService.InputEnded:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+			if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == (self.Keybind or Enum.KeyCode.Unknown) then
+				if self.KeyMode == "Hold" then
+					self:SetEnabled(false)
+				end
+			end
+		end)
+	end)
+
 	print("[UwU Hub] ✅ AimLock inicializado!")
+end
+
+-- API: Alternar via chamada externa
+function AimLock:SetEnabled(value: boolean): ()
+	if value == nil then return end
+	if self.State.Enabled ~= value then
+		self:ToggleAimAssist()
+	end
+end
+
+function AimLock:SetFOV(value: number): ()
+	if type(value) ~= "number" then return end
+	self.State.FOVRadius = math.clamp(value, 1, 50)
+	if self.UI and self.UI.ValueBox then
+		self.UI.ValueBox.Text = tostring(self.State.FOVRadius)
+	end
+end
+
+function AimLock:SetMode(index: number): ()
+	if type(index) ~= "number" or index < 1 or index > #self.Modes then return end
+	self.State.CurrentModeIndex = index
+	if self.UI and self.UI.ModeBtn then
+		self.UI.ModeBtn.Text = "⚡ Modo: " .. self.Modes[self.State.CurrentModeIndex].Name
+	end
+end
+
+-- Setup Rayfield controls (tab) - chamada por UI
+function AimLock:SetupRayfieldControls(tab: any): ()
+	if not tab then return end
+	-- Ensure module initialized without GUI
+	pcall(function() self:Initialize(false) end)
+
+	-- Toggle
+	tab:CreateToggle({
+		Name = "Enable AimLock",
+		CurrentValue = self.State.Enabled,
+		Flag = "AimLockToggle",
+		Callback = function(value)
+			pcall(function()
+				self:SetEnabled(value)
+			end)
+		end
+	})
+
+	-- FOV slider
+	tab:CreateSlider({
+		Name = "FOV Radius",
+		Range = {1, 50},
+		Increment = 1,
+		Suffix = "",
+		CurrentValue = self.State.FOVRadius,
+		Callback = function(val)
+			pcall(function() self:SetFOV(val) end)
+		end
+	})
+
+	-- Mode dropdown
+	local modeNames = {}
+	for i, m in ipairs(self.Modes) do table.insert(modeNames, m.Name) end
+	tab:CreateDropdown({
+		Name = "Aim Mode",
+		Options = modeNames,
+		CurrentOption = modeNames[self.State.CurrentModeIndex] or modeNames[1],
+		MultiSelect = false,
+		Callback = function(option)
+			for i, n in ipairs(modeNames) do
+				if n == option then pcall(function() self:SetMode(i) end) break end
+			end
+		end
+	})
+
+	-- Keybind control (if Rayfield supports it)
+	cpcall(function()
+		if tab.CreateKeybind then
+			tab:CreateKeybind({
+				Name = "AimLock Key",
+				CurrentKey = self.Keybind or Enum.KeyCode.LeftAlt,
+				Mode = self.KeyMode or "Toggle",
+				Flag = "AimLock_Key",
+				Callback = function(key)
+					-- key is an Enum.KeyCode
+					self.Keybind = key or self.Keybind
+				end,
+				ChangedCallback = function(mode)
+					-- optional: some APIs pass mode change separately
+					if type(mode) == "string" then self.KeyMode = mode end
+				end
+			})
+		end
+	end)
 end
 
 -- Criar UI (Parte 1)
@@ -330,10 +461,25 @@ end
 
 -- Criar Overlay (círculo FOV)
 function AimLock:CreateOverlay(screen: ScreenGui?): ()
-	if not screen then return end
-	
+	-- If no screen provided, create a local ScreenGui in PlayerGui
+	local parentScreen = screen
+	if not parentScreen then
+		local playerGui = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
+		if playerGui then
+			parentScreen = create("ScreenGui", {
+				Name = "UwUHubOverlay",
+				ResetOnSpawn = false,
+				Parent = playerGui,
+				IgnoreGuiInset = true,
+				ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			})
+		else
+			return
+		end
+	end
+
 	local overlay = create("Frame", {
-		Parent = screen,
+		Parent = parentScreen,
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundTransparency = 1,
 		ZIndex = 50
@@ -382,6 +528,14 @@ function AimLock:Cleanup(): ()
 	RunService:UnbindFromRenderStep("UwUHubAimAssist")
 	if self.UI.Content then
 		self.UI.Content:Destroy()
+	end
+	if self._inputConn then
+		pcall(function() self._inputConn:Disconnect() end)
+		self._inputConn = nil
+	end
+	if self._inputEndConn then
+		pcall(function() self._inputEndConn:Disconnect() end)
+		self._inputEndConn = nil
 	end
 	print("[UwU Hub] 🧹 AimLock cleanup completo")
 end

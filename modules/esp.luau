@@ -282,34 +282,101 @@ function ESP:StartUpdateLoop(): ()
 end
 
 -- Inicializar
-function ESP:Initialize(): ()
+function ESP:Initialize(useGui: boolean?): ()
 	print("[UwU Hub] 👁️ Inicializando ESP...")
-	
-	self:CreateContainer()
-	
-	-- Adicionar ESP para players existentes
-	for _, player in pairs(Players:GetPlayers()) do
-		if player ~= localPlayer then
-			self:CreateESPForPlayer(player)
-		end
+
+	-- Inicialização padrão
+	if not self.State then
+		self.State = {
+			Initialized = false,
+			ESPObjects = {} :: {[Player]: ESPObject},
+			Container = nil :: ScreenGui?
+		}
 	end
-	
-	-- Listener para novos players
-	Players.PlayerAdded:Connect(function(player)
-		task.wait(1)
-		self:CreateESPForPlayer(player)
-	end)
-	
-	-- Listener para players saindo
-	Players.PlayerRemoving:Connect(function(player)
-		self:RemoveESPForPlayer(player)
-	end)
-	
-	-- Iniciar loop de atualização
+
+	-- Criar container padrão somente se useGui for true ou nil
+	if useGui ~= false then
+		self:CreateContainer()
+
+		-- Adicionar ESP para players existentes
+		for _, player in pairs(Players:GetPlayers()) do
+			if player ~= localPlayer then
+				self:CreateESPForPlayer(player)
+			end
+		end
+
+		-- Listener para novos players
+		Players.PlayerAdded:Connect(function(player)
+			task.wait(1)
+			self:CreateESPForPlayer(player)
+		end)
+
+		-- Listener para players saindo
+		Players.PlayerRemoving:Connect(function(player)
+			self:RemoveESPForPlayer(player)
+		end)
+	else
+		-- If GUI is disabled, still prepare state but don't create GUI elements now.
+		-- Modules may create GUI per-player later when needed.
+	end
+
+	-- Iniciar loop de atualização (always)
 	self:StartUpdateLoop()
-	
+
 	self.State.Initialized = true
 	print("[UwU Hub] ✅ ESP inicializado!")
+end
+
+-- API: Toggle via chamada externa
+function ESP:SetEnabled(value: boolean): ()
+	if value == nil then return end
+	if self.Config.Enabled ~= value then
+		self:Toggle()
+	end
+end
+
+-- Setup Rayfield controls
+function ESP:SetupRayfieldControls(tab: any): ()
+	if not tab then return end
+	pcall(function() self:Initialize() end)
+
+	tab:CreateToggle({
+		Name = "Enable ESP",
+		CurrentValue = self.Config.Enabled,
+		Flag = "ESPToggle",
+		Callback = function(val)
+			pcall(function() self:SetEnabled(val) end)
+		end
+	})
+
+	tab:CreateToggle({
+		Name = "Show Names",
+		CurrentValue = self.Config.ShowNames,
+		Flag = "ESPShowNames",
+		Callback = function(val)
+			self.Config.ShowNames = val
+		end
+	})
+
+	tab:CreateToggle({
+		Name = "Show Distance",
+		CurrentValue = self.Config.ShowDistance,
+		Flag = "ESPShowDistance",
+		Callback = function(val)
+			self.Config.ShowDistance = val
+		end
+	})
+
+	tab:CreateSlider({
+		Name = "Max Distance",
+		Range = {100, 3000},
+		Increment = 50,
+		Suffix = "m",
+		CurrentValue = self.Config.MaxDistance,
+		Callback = function(val)
+			self.Config.MaxDistance = val
+		end
+	})
 end
 
 -- Toggle ESP

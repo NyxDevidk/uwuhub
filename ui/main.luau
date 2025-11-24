@@ -4,6 +4,21 @@
 
 local UI = {}
 
+-- Rayfield integration (optional)
+local Rayfield: any = nil
+local RayfieldWindow: any = nil
+
+local function tryLoadRayfield()
+	local ok, rf = pcall(function()
+		return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+	end)
+	if ok and rf then
+		Rayfield = rf
+		return true
+	end
+	return false
+end
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -57,6 +72,117 @@ function UI:Create(config: {Name: string, Discord: string}): ()
 	
 	-- Animação de entrada
 	self:AnimateOpen()
+
+	-- Tentar carregar Rayfield e criar uma janela adicional com controles
+	local loaded = pcall(tryLoadRayfield)
+	if loaded and Rayfield then
+		local ok, err = pcall(function()
+			RayfieldWindow = Rayfield:CreateWindow({
+				Name = config.Name or "UwU Hub",
+				LoadingTitle = config.Name or "UwU Hub",
+				LoadingSubtitle = config.Discord or "",
+				ConfigurationSaving = {Enabled = true, Folder = "UwUHub", FileName = "config"},
+				Discord = {Enabled = false},
+				KeySystem = false,
+			})
+
+			local aimTab = RayfieldWindow:CreateTab("AimLock")
+			local espTab = RayfieldWindow:CreateTab("ESP")
+
+			-- Setup Rayfield controls for AimLock and ESP
+			local AimLock = require(script.Parent.Parent.modules.aimlock)
+			local ESP = require(script.Parent.Parent.modules.esp)
+			pcall(function()
+				if AimLock then
+					-- initialize logic without legacy GUI
+					pcall(function() AimLock:Initialize(false) end)
+					if AimLock.SetupRayfieldControls then
+						AimLock:SetupRayfieldControls(aimTab)
+					else
+						-- fallback simple toggle
+						aimTab:CreateToggle({
+							Name = "Enable AimLock",
+							CurrentValue = AimLock.State and AimLock.State.Enabled or false,
+							Callback = function(val) pcall(function() AimLock:SetEnabled(val) end) end
+						})
+					end
+					-- Keybind to toggle AimLock
+					pcall(function()
+						if aimTab.CreateKeybind then
+							aimTab:CreateKeybind({
+								Name = "Toggle AimLock Key",
+								CurrentKey = Enum.KeyCode.LeftAlt,
+								Mode = "Toggle",
+								Flag = "AimLockKey",
+								Callback = function(key)
+									-- Toggle current state
+									pcall(function()
+										local cur = AimLock.State and AimLock.State.Enabled or false
+										AimLock:SetEnabled(not cur)
+									end)
+								end
+							})
+						end
+					end)
+				end
+				if ESP then
+					pcall(function() ESP:Initialize(false) end)
+					if ESP.SetupRayfieldControls then
+						ESP:SetupRayfieldControls(espTab)
+					else
+						espTab:CreateToggle({
+							Name = "Enable ESP",
+							CurrentValue = ESP.Config and ESP.Config.Enabled or false,
+							Callback = function(val) pcall(function() ESP:SetEnabled(val) end) end
+						})
+					end
+					-- Keybind to toggle ESP
+					pcall(function()
+						if espTab.CreateKeybind then
+							espTab:CreateKeybind({
+								Name = "Toggle ESP Key",
+								CurrentKey = Enum.KeyCode.LeftControl,
+								Mode = "Toggle",
+								Flag = "ESPKey",
+								Callback = function(key)
+									pcall(function()
+										local cur = ESP.Config and ESP.Config.Enabled or false
+										ESP:SetEnabled(not cur)
+									end)
+								end
+							})
+						end
+					end)
+					-- Color picker for ESP color (if supported by module)
+					pcall(function()
+						if espTab.CreateColorPicker then
+							espTab:CreateColorPicker({
+								Name = "ESP Color",
+								Default = Color3.fromRGB(255, 105, 180),
+								Flag = "ESPColor",
+								Callback = function(color)
+									-- apply color to existing ESP strokes if present
+									pcall(function()
+										if ESP and ESP.State and ESP.State.ESPObjects then
+											for _, obj in pairs(ESP.State.ESPObjects) do
+												if obj and obj.Box then
+													local stroke = obj.Box:FindFirstChildOfClass("UIStroke")
+													if stroke then stroke.Color = color end
+												end
+											end
+										end)
+									end)
+								end
+							})
+						end
+					end)
+				end
+			end)
+		end)
+		if not ok then
+			warn("Rayfield loaded but window creation failed:", err)
+		end
+	end
 end
 
 -- Botão Abrir
