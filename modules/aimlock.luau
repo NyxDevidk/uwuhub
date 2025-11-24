@@ -284,7 +284,7 @@ function AimLock:SetupRayfieldControls(tab: any): ()
 	})
 
 	-- Keybind control (if Rayfield supports it)
-	cpcall(function()
+	pcall(function()
 		if tab.CreateKeybind then
 			tab:CreateKeybind({
 				Name = "AimLock Key",
