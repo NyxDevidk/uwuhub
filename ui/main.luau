@@ -1,346 +1,96 @@
 --!strict
--- UI Main Module
--- Gerencia a interface principal do UwU Hub
+-- UI Main Module (Rayfield Only)
 
 local UI = {}
+local Rayfield = nil
 
--- Rayfield integration (optional)
-local Rayfield: any = nil
-local RayfieldWindow: any = nil
-
-local function tryLoadRayfield()
-	local ok, rf = pcall(function()
+function UI:Create(config: {Name: string, Discord: string}): ()
+	print("[UwU Hub] Carregando Rayfield...")
+	
+	-- Load Rayfield
+	local ok, result = pcall(function()
 		return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 	end)
-	if ok and rf then
-		Rayfield = rf
-		return true
-	end
-	return false
-end
-
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-
--- Tipos
-export type TabInfo = {
-	Button: TextButton,
-	Content: Frame?
-}
-
--- Propriedades
-UI.Screen: ScreenGui? = nil
-UI.Main: Frame? = nil
-UI.OpenBtn: ImageButton? = nil
-UI.Tabs: {[string]: TabInfo} = {}
-UI.CurrentTab: string = "AimLock"
-
--- Utilitário para criar elementos
-local function create<T>(className: string, props: {[string]: any}?): T
-	local obj = Instance.new(className)
-	if props then 
-		for k, v in pairs(props) do 
-			(obj :: any)[k] = v
-		end 
-	end
-	return obj :: any
-end
-
--- Criar UI Principal
-function UI:Create(config: {Name: string, Discord: string}): ()
-	local localPlayer = Players.LocalPlayer
-	local playerGui = localPlayer:WaitForChild("PlayerGui") :: PlayerGui
 	
-	-- ScreenGui Principal
-	self.Screen = create("ScreenGui", {
-		Name = "UwUHubUI",
-		ResetOnSpawn = false,
-		Parent = playerGui,
-		IgnoreGuiInset = true,
-		ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	if not ok or not result then
+		warn("[UwU Hub] Falha ao carregar Rayfield")
+		return
+	end
+	
+	Rayfield = result
+	
+	-- Create Window
+	local Window = Rayfield:CreateWindow({
+		Name = config.Name or "UwU Hub",
+		LoadingTitle = config.Name or "UwU Hub",
+		LoadingSubtitle = config.Discord or "",
+		ConfigurationSaving = {Enabled = true, Folder = "UwUHub", FileName = "config"},
+		Theme = {
+			TextColor = Color3.fromRGB(250, 240, 250),
+			Background = Color3.fromRGB(28, 20, 30),
+			Topbar = Color3.fromRGB(45, 20, 35),
+			Shadow = Color3.fromRGB(15, 10, 15),
+			NotificationBackground = Color3.fromRGB(30, 20, 30),
+			NotificationActionsBackground = Color3.fromRGB(250, 240, 250),
+			TabBackground = Color3.fromRGB(60, 40, 55),
+			TabStroke = Color3.fromRGB(70, 45, 65),
+			TabBackgroundSelected = Color3.fromRGB(255, 220, 235),
+			TabTextColor = Color3.fromRGB(240, 230, 240),
+			SelectedTabTextColor = Color3.fromRGB(40, 20, 30),
+			ElementBackground = Color3.fromRGB(35, 25, 35),
+			ElementBackgroundHover = Color3.fromRGB(45, 30, 45),
+			SecondaryElementBackground = Color3.fromRGB(25, 20, 25),
+			ElementStroke = Color3.fromRGB(80, 50, 70),
+			SecondaryElementStroke = Color3.fromRGB(60, 40, 55),
+			SliderBackground = Color3.fromRGB(255, 105, 180),
+			SliderProgress = Color3.fromRGB(255, 130, 200),
+			SliderStroke = Color3.fromRGB(255, 160, 220),
+			ToggleBackground = Color3.fromRGB(30, 25, 30),
+			ToggleEnabled = Color3.fromRGB(255, 105, 180),
+			ToggleDisabled = Color3.fromRGB(130, 110, 130),
+			ToggleEnabledStroke = Color3.fromRGB(255, 140, 200),
+			ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
+			ToggleEnabledOuterStroke = Color3.fromRGB(160, 120, 140),
+			ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
+			DropdownSelected = Color3.fromRGB(45, 30, 40),
+			DropdownUnselected = Color3.fromRGB(30, 20, 30),
+			InputBackground = Color3.fromRGB(30, 25, 30),
+			InputStroke = Color3.fromRGB(70, 50, 70),
+			PlaceholderColor = Color3.fromRGB(200, 180, 200)
+		},
+		Discord = {Enabled = false},
+		KeySystem = false,
 	})
 	
-	-- Botão de Abrir (minimizado)
-	self:CreateOpenButton()
+	-- Tabs
+	local AimTab = Window:CreateTab("🎯 AimLock")
+	local EspTab = Window:CreateTab("👁️ ESP")
 	
-	-- Frame Principal
-	self:CreateMainFrame(config)
-	
-	-- Criar Abas
-	self:CreateTabs()
-	
-	-- Animação de entrada
-	self:AnimateOpen()
-
-	-- Tentar carregar Rayfield (protegido)
+	-- Load AimLock
+	local AimLock = nil
 	pcall(function()
-		if not tryLoadRayfield() or not Rayfield then return end
-
-		pcall(function()
-			RayfieldWindow = Rayfield:CreateWindow({
-				Name = config.Name or "UwU Hub",
-				LoadingTitle = config.Name or "UwU Hub",
-				LoadingSubtitle = config.Discord or "",
-				ConfigurationSaving = {Enabled = true, Folder = "UwUHub", FileName = "config"},
-				Theme = {
-					TextColor = Color3.fromRGB(250, 240, 250),
-					Background = Color3.fromRGB(28, 20, 30),
-					Topbar = Color3.fromRGB(45, 20, 35),
-					Shadow = Color3.fromRGB(15, 10, 15),
-					NotificationBackground = Color3.fromRGB(30, 20, 30),
-					NotificationActionsBackground = Color3.fromRGB(250, 240, 250),
-					TabBackground = Color3.fromRGB(60, 40, 55),
-					TabStroke = Color3.fromRGB(70, 45, 65),
-					TabBackgroundSelected = Color3.fromRGB(255, 220, 235),
-					TabTextColor = Color3.fromRGB(240, 230, 240),
-					SelectedTabTextColor = Color3.fromRGB(40, 20, 30),
-					ElementBackground = Color3.fromRGB(35, 25, 35),
-					ElementBackgroundHover = Color3.fromRGB(45, 30, 45),
-					SecondaryElementBackground = Color3.fromRGB(25, 20, 25),
-					ElementStroke = Color3.fromRGB(80, 50, 70),
-					SecondaryElementStroke = Color3.fromRGB(60, 40, 55),
-					SliderBackground = Color3.fromRGB(255, 105, 180),
-					SliderProgress = Color3.fromRGB(255, 130, 200),
-					SliderStroke = Color3.fromRGB(255, 160, 220),
-					ToggleBackground = Color3.fromRGB(30, 25, 30),
-					ToggleEnabled = Color3.fromRGB(255, 105, 180),
-					ToggleDisabled = Color3.fromRGB(130, 110, 130),
-					ToggleEnabledStroke = Color3.fromRGB(255, 140, 200),
-					ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
-					ToggleEnabledOuterStroke = Color3.fromRGB(160, 120, 140),
-					ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
-					DropdownSelected = Color3.fromRGB(45, 30, 40),
-					DropdownUnselected = Color3.fromRGB(30, 20, 30),
-					InputBackground = Color3.fromRGB(30, 25, 30),
-					InputStroke = Color3.fromRGB(70, 50, 70),
-					PlaceholderColor = Color3.fromRGB(200, 180, 200)
-				},
-				Discord = {Enabled = false},
-				KeySystem = false,
-			})
-
-			if not RayfieldWindow then return end
-			local aimTab = RayfieldWindow:CreateTab("AimLock")
-			local espTab = RayfieldWindow:CreateTab("ESP")
-
-			-- Load modules
-			local aimLock, aimErr = pcall(function() return require(script.Parent.Parent.modules.aimlock) end)
-			local esp, espErr = pcall(function() return require(script.Parent.Parent.modules.esp) end)
-
-			if aimLock and type(aimLock) == "table" then
-				pcall(function() aimLock:Initialize(false) end)
-				if aimLock.SetupRayfieldControls then
-					pcall(function() aimLock:SetupRayfieldControls(aimTab) end)
-				end
+		AimLock = require(script.Parent.Parent.modules.aimlock)
+		if AimLock then
+			AimLock:Initialize(false)
+			if AimLock.SetupRayfieldControls then
+				AimLock:SetupRayfieldControls(AimTab)
 			end
-
-			if esp and type(esp) == "table" then
-				pcall(function() esp:Initialize(false) end)
-				if esp.SetupRayfieldControls then
-					pcall(function() esp:SetupRayfieldControls(espTab) end)
-				end
+		end
+	end)
+	
+	-- Load ESP
+	local ESP = nil
+	pcall(function()
+		ESP = require(script.Parent.Parent.modules.esp)
+		if ESP then
+			ESP:Initialize(false)
+			if ESP.SetupRayfieldControls then
+				ESP:SetupRayfieldControls(EspTab)
 			end
-		end)
-	end)
-end
-
--- Botão Abrir
-function UI:CreateOpenButton(): ()
-	self.OpenBtn = create("ImageButton", {
-		Parent = self.Screen,
-		Size = UDim2.new(0, 100, 0, 40),
-		Position = UDim2.new(0, 10, 0.5, -20),
-		BackgroundColor3 = Color3.fromRGB(24, 24, 24),
-		Image = "rbxassetid://80222934775009",
-		ImageTransparency = 0,
-		ImageColor3 = Color3.new(1, 1, 1),
-		ScaleType = Enum.ScaleType.Fit,
-		Visible = false
-	})
-	create("UICorner", {Parent = self.OpenBtn, CornerRadius = UDim.new(0, 8)})
-	create("UIStroke", {
-		Parent = self.OpenBtn, 
-		Color = Color3.fromRGB(255, 105, 180), -- Rosa UwU
-		Thickness = 2
-	})
-	
-	self.OpenBtn.MouseButton1Click:Connect(function()
-		if self.Main then
-			self.Main.Visible = true
-			self.OpenBtn.Visible = false
-			self:AnimateOpen()
-		end
-	end)
-end
-
--- Frame Principal
-function UI:CreateMainFrame(config: {Name: string, Discord: string}): ()
-	self.Main = create("Frame", {
-		Name = "Main",
-		Size = UDim2.new(0, 500, 0, 300),
-		Position = UDim2.new(0.5, -250, 0.5, -150),
-		BackgroundColor3 = Color3.fromRGB(20, 20, 25),
-		BorderSizePixel = 0,
-		Parent = self.Screen,
-		Active = true,
-		Draggable = true
-	})
-	create("UICorner", {Parent = self.Main, CornerRadius = UDim.new(0, 12)})
-	create("UIStroke", {
-		Parent = self.Main,
-		Color = Color3.fromRGB(255, 105, 180),
-		Thickness = 2
-	})
-	
-	-- Gradiente de fundo
-	local gradient = create("UIGradient", {
-		Parent = self.Main,
-		Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 25)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 20, 35))
-		}),
-		Rotation = 45
-	})
-	
-	-- Botão Minimizar
-	local minBtn = create("TextButton", {
-		Parent = self.Main,
-		Size = UDim2.new(0, 30, 0, 30),
-		Position = UDim2.new(1, -35, 0, 5),
-		BackgroundColor3 = Color3.fromRGB(200, 50, 100),
-		Text = "−",
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		TextColor3 = Color3.new(1, 1, 1)
-	})
-	create("UICorner", {Parent = minBtn, CornerRadius = UDim.new(0, 6)})
-	
-	minBtn.MouseButton1Click:Connect(function()
-		self:AnimateClose()
-		task.wait(0.2)
-		if self.Main then
-			self.Main.Visible = false
-		end
-		if self.OpenBtn then
-			self.OpenBtn.Visible = true
 		end
 	end)
 	
-	-- Título com emoji UwU
-	create("TextLabel", {
-		Parent = self.Main,
-		Text = "✨ " .. config.Name .. " ✨",
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		TextColor3 = Color3.fromRGB(255, 105, 180),
-		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 20, 0, 8),
-		Size = UDim2.new(0, 300, 0, 28),
-		TextXAlignment = Enum.TextXAlignment.Left
-	})
-	
-	-- Subtítulo
-	create("TextLabel", {
-		Parent = self.Main,
-		Text = "🌸 " .. config.Discord,
-		Font = Enum.Font.Gotham,
-		TextSize = 12,
-		TextColor3 = Color3.fromRGB(200, 150, 200),
-		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 20, 0, 36),
-		Size = UDim2.new(0, 280, 0, 18),
-		TextXAlignment = Enum.TextXAlignment.Left
-	})
-end
-
--- Criar Abas
-function UI:CreateTabs(): ()
-	local tabBar = create("Frame", {
-		Parent = self.Main,
-		Position = UDim2.new(0, 0, 0, 60),
-		Size = UDim2.new(1, 0, 0, 40),
-		BackgroundColor3 = Color3.fromRGB(15, 15, 20),
-	})
-	
-	-- Content Frame
-	local contentFrame = create("Frame", {
-		Name = "Content",
-		Parent = self.Main,
-		Position = UDim2.new(0, 0, 0, 100),
-		Size = UDim2.new(1, 0, 1, -100),
-		BackgroundTransparency = 1,
-	})
-	
-	-- Tab AimLock
-	local aimLockBtn = create("TextButton", {
-		Parent = tabBar,
-		Size = UDim2.new(0.5, -5, 1, -2),
-		Position = UDim2.new(0, 5, 0, 1),
-		BackgroundColor3 = Color3.fromRGB(255, 105, 180),
-		Text = "🎯 AIM LOCK",
-		Font = Enum.Font.GothamBold,
-		TextSize = 14,
-		TextColor3 = Color3.new(1, 1, 1),
-	})
-	create("UICorner", {Parent = aimLockBtn, CornerRadius = UDim.new(0, 6)})
-	
-	-- Tab ESP
-	local espBtn = create("TextButton", {
-		Parent = tabBar,
-		Size = UDim2.new(0.5, -5, 1, -2),
-		Position = UDim2.new(0.5, 0, 0, 1),
-		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
-		Text = "👁️ ESP",
-		Font = Enum.Font.GothamBold,
-		TextSize = 14,
-		TextColor3 = Color3.fromRGB(150, 150, 150),
-	})
-	create("UICorner", {Parent = espBtn, CornerRadius = UDim.new(0, 6)})
-	
-	-- Armazenar
-	self.Tabs.AimLock = {Button = aimLockBtn, Content = contentFrame}
-	self.Tabs.ESP = {Button = espBtn}
-	
-	-- Eventos de clique (preparado para múltiplas abas)
-	espBtn.MouseButton1Click:Connect(function()
-		print("[UwU Hub] 🚧 ESP em desenvolvimento!")
-	end)
-end
-
--- Animações
-function UI:AnimateOpen(): ()
-	if not self.Main then return end
-	
-	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-	self.Main.Size = UDim2.new(0, 0, 0, 0)
-	
-	local tween = TweenService:Create(self.Main, tweenInfo, {
-		Size = UDim2.new(0, 500, 0, 300)
-	})
-	tween:Play()
-end
-
-function UI:AnimateClose(): ()
-	if not self.Main then return end
-	
-	local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-	local tween = TweenService:Create(self.Main, tweenInfo, {
-		Size = UDim2.new(0, 0, 0, 0)
-	})
-	tween:Play()
-end
-
--- Obter Content Frame
-function UI:GetContentFrame(): Frame?
-	return self.Main and self.Main:FindFirstChild("Content") :: Frame
-end
-
--- Cleanup
-function UI:Cleanup(): ()
-	if self.Screen then
-		self.Screen:Destroy()
-	end
+	print("[UwU Hub] ✅ Interface carregada!")
 end
 
 return UI
